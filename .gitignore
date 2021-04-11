@@ -1,0 +1,5 @@
+
+*.pyc
+.vscode
+data/*.json
+data/index.html
