@@ -1,74 +1,69 @@
 
 # self-status-page
 
-Build a status page with just one config file and one output file.
+Build a status page with just one command.
 
-## How to run
+[中文简体](./README_CN.md)
 
-Create a `docker-compose.yml` as config file (or download this):
+## Quick start
 
-```yaml
-version: '3'
-services:
-  self-status-page:
-    image: 'phyng/self-status-page:latest'
-    environment:
-      # use STATUS_<id>_NAME to config multiple task
-      - STATUS_GITHUB_NAME=Github
-      - STATUS_GITHUB_TYPE=http
-      - STATUS_GITHUB_URL=https://github.com/
-      # you can use config type: http/ping/shell ...
-      - STATUS_GOOGLE_DNS_NAME=Google DNS
-      - STATUS_GOOGLE_DNS_TYPE=ping
-      - STATUS_GOOGLE_DNS_IP=8.8.8.8
-      # you can group tasks, the default group is 'services'
-      - STATUSGROUP_SERVICES_NAME=Services
-      - STATUSGROUP_SERVICES_TASKS=GITHUB,GOOGLE_DNS
+```bash
+docker run --rm -ti -p 8081:80 \
+  -e STATUS_EXAMPLE_NAME=Example \
+  -e STATUS_EXAMPLE_TYPE=http \
+  -e STATUS_EXAMPLE_URL=http://www.example.com/ \
+  phyng/self-status-page:latest
 ```
 
-## Why self-status-page
+open [http://localhost:8081/](http://localhost:8081/) and everything is OK.
 
-- Just one config file
-- Just one output file `index.html`, so you can simply deploy to any environment
-- Support service group and response time and history data
-- Support `http/ping/shell` check method
+## Productized deployment
 
-## How it works
+If you need to use more complex configuration and persistent history, you can create a `data` folder and mount it inside the container.
+At the same time, it supports to manage the configuration through `data/config.env`, and then start it with the following command
 
-- Use python to run parse rule and run
-- Use Nginx to server html file
-- Use ofelia as job scheduler
-- Use json to save history data
+```bash
+# replace /path/to/data to you absolute path
+docker run -d -p 8081:80 --name self-status-page -v /path/to/data:/usr/src/app/data phyng/self-status-page:latest
+```
+
+You can refer to the `data/config.env` file.
 
 ## Advanced Config
 
-```yaml
-id
-name
-type
-```
+Since the environment variables are flat and the key cannot be repeated, we implement the complex configuration by using unique key for the environment variables. The following configuration file examples follow the following rules
 
-### type: url
-
-```yaml
-url
-method
-```
-
-### type: ping
-
-```yaml
-ip
-```
-
-### type: shell
-
-```
-cmd
-```
-
-## other
+- Use `STATUS_<taskId>_NAME` to declare a detection task, set the task type by `STATUS_<taskId>_TYPE`, and set the task attributes for other `STATUS_<taskId>_*`
+- Use `STATUSGROUP_{groupId}_NAME` to declare a task group, use `STATUSGROUP_{taskId}_TASKS` to set the task ID under the group, ungrouped tasks are classified as `SERVICES` group by default
 
 ```bash
-timeout 10 ping -c 1 baidu.com | tail -n 1 | awk '{print $4}' | cut -d'/' -f1
+# Declare a task with ID EXAMPLE, of type http
+STATUS_EXAMPLE_NAME=Example
+STATUS_EXAMPLE_TYPE=http
+STATUS_EXAMPLE_URL=http://www.example.com/
+
+STATUS_GITHUB_NAME=Github
+STATUS_GITHUB_TYPE=http
+STATUS_GITHUB_URL=https://github.com/
+
+# Declare the Search group, including two tasks BING and GOOGLE_DNS
+STATUSGROUP_SEARCH_NAME=Search
+STATUSGROUP_SEARCH_TASKS=BING,GOOGLE_DNS
+
+# Declare ping task
+STATUS_GOOGLE_DNS_NAME=Google DNS
+STATUS_GOOGLE_DNS_TYPE=ping
+STATUS_GOOGLE_DNS_IP=8.8.8.8
+
+STATUS_BING_NAME=Bing
+STATUS_BING_TYPE=http
+STATUS_BING_URL=https://bing.com/
 ```
+
+## Features
+
+- One command: docker one-click creation
+- One file: generate a `data/index.html` file regularly to facilitate integration and deployment
+- Support for multiple types of detection tasks
+- Support task grouping
+- Support history

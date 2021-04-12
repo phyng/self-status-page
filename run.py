@@ -42,7 +42,7 @@ def read_config():
                     config_lines.append(line.strip())
     for key, line in os.environ.items():
         if key.startswith('STATUS'):
-            config_lines.append(line.strip())
+            config_lines.append(key + '=' + line.strip())
 
     configs = {}
     for line in config_lines:
@@ -223,7 +223,7 @@ def watch_html():
 
 
 def schedule():
-    print('Self-status-page start with config:')
+    print('Self-status-page start with config:\n')
     pprint.pprint(read_config())
     print('\nPlease wait first build end...')
     while True:

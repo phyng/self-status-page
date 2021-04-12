@@ -9,6 +9,7 @@ RUN apk add --no-cache \
 
 WORKDIR /usr/src/app
 COPY . .
+RUN rm data/*
 
 # nginx
 RUN mkdir -p /run/nginx
