@@ -165,15 +165,14 @@ def run_task(task):
 
 def run_tasks():
     task_groups = read_config()
-    pprint.pprint(task_groups)
     results = []
     for group_id, group in task_groups.items():
-        print(f'Start group {group_id}')
+        print(f'group={group_id}')
         for task in group['tasks']:
             error, total_time, message = run_task(task)
             print(
-                f"task={task['task_id']} "
-                f"error={error} total_time={total_time} message={message}"
+                f"    task={task['task_id']} "
+                f"error={error} total_time={total_time} message={message[:20]}"
             )
             results.append([
                 task['task_id'],
@@ -212,6 +211,22 @@ def watch_html():
         time.sleep(1)
 
 
+def schedule():
+    print('Self-status-page start with config:')
+    pprint.pprint(read_config())
+    print('\nPlease wait first build end...')
+    while True:
+        try:
+            print('Build start...')
+            run_tasks()
+            print('Build end...')
+        except Exception as e:
+            print(e)
+            continue
+        print('Wait next build ...\n')
+        time.sleep(10)
+
+
 if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option(
@@ -226,6 +241,7 @@ if __name__ == '__main__':
     actions = dict(
         run_tasks=run_tasks,
         watch_html=watch_html,
+        schedule=schedule,
     )
     if options.action in actions:
         actions[options.action]()
