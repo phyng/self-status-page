@@ -1,6 +1,8 @@
 # coding: utf-8
 
 import os
+import sys
+import logging
 import time
 import json
 import pprint
@@ -20,6 +22,15 @@ CONFIG_FILE = (
 )
 ERROR_CONFIG = 'ERROR_CONFIG'
 ERROR_RUN = 'ERROR_RUN'
+
+logger = logging.getLogger('self-status-page')
+logger.setLevel(logging.INFO)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def read_config():
@@ -167,12 +178,12 @@ def run_tasks():
     task_groups = read_config()
     results = []
     for group_id, group in task_groups.items():
-        print(f'group={group_id}')
+        logger.info(f'group={group_id}')
         for task in group['tasks']:
             error, total_time, message = run_task(task)
-            print(
+            logger.info(
                 f"    task={task['task_id']} "
-                f"error={error} total_time={total_time} message={message[:20]}"
+                f"error={error} total_time={total_time} message={message[:80]}"
             )
             results.append([
                 task['task_id'],
@@ -217,13 +228,13 @@ def schedule():
     print('\nPlease wait first build end...')
     while True:
         try:
-            print('Build start...')
+            logger.info('Build start...')
             run_tasks()
-            print('Build end...')
+            logger.info('Build end...')
         except Exception as e:
-            print(e)
+            logger.error(e)
             continue
-        print('Wait next build ...\n')
+        logger.info('Wait next build ...\n')
         time.sleep(10)
 
 
