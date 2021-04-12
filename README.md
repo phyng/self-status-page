@@ -37,7 +37,7 @@ Since the environment variables are flat and the key cannot be repeated, we impl
 - Use `STATUSGROUP_{groupId}_NAME` to declare a task group, use `STATUSGROUP_{taskId}_TASKS` to set the task ID under the group, ungrouped tasks are classified as `SERVICES` group by default
 
 ```bash
-# Declare a task with ID EXAMPLE, of type http
+# declare a task with ID EXAMPLE, of type http
 STATUS_EXAMPLE_NAME=Example
 STATUS_EXAMPLE_TYPE=http
 STATUS_EXAMPLE_URL=http://www.example.com/
@@ -46,11 +46,11 @@ STATUS_GITHUB_NAME=Github
 STATUS_GITHUB_TYPE=http
 STATUS_GITHUB_URL=https://github.com/
 
-# Declare the Search group, including two tasks BING and GOOGLE_DNS
+# declare the Search group, including two tasks BING and GOOGLE_DNS
 STATUSGROUP_SEARCH_NAME=Search
 STATUSGROUP_SEARCH_TASKS=BING,GOOGLE_DNS
 
-# Declare ping task
+# declare ping task
 STATUS_GOOGLE_DNS_NAME=Google DNS
 STATUS_GOOGLE_DNS_TYPE=ping
 STATUS_GOOGLE_DNS_IP=8.8.8.8
