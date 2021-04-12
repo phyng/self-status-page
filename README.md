@@ -1,9 +1,11 @@
 
 # self-status-page
 
-Build a status page with just one command.
+Build a status page with just one command. and only one output file.
 
-[中文简体](./README_CN.md)
+- Demo: [https://self-status-page.phyng.com/](https://self-status-page.phyng.com/)
+- Docker Hub [https://hub.docker.com/r/phyng/self-status-page](https://hub.docker.com/r/phyng/self-status-page)
+- [中文简体文档](https://github.com/phyng/self-status-page/blob/main/README_CN.md)
 
 ## Quick start
 
