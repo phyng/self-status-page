@@ -133,7 +133,7 @@
 
   <script>
     const startTime = +new Date()
-    const context = JSON.parse(`{{ context }}`);
+    const context = JSON.parse(atob('{{ context }}'));
     const TemplateEngine = function(html, options) {
       // Fork from: https://krasimirtsonev.com/blog/article/Javascript-template-engine-in-just-20-line
       let re = /\(%([^%]+)?%\)/g, reExp = /(^( )?(if|for|else|switch|case|break|{|}))(.*)?/g, code = 'var r=[];\n', cursor = 0, match;

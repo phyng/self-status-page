@@ -5,6 +5,7 @@ import sys
 import logging
 import time
 import json
+import base64
 import pprint
 import datetime
 import subprocess
@@ -22,6 +23,8 @@ CONFIG_FILE = (
 )
 ERROR_CONFIG = 'ERROR_CONFIG'
 ERROR_RUN = 'ERROR_RUN'
+
+STATUS_CONFIG_TIMEOUT = int(os.environ.get('STATUS_CONFIG_TIMEOUT') or 30)
 
 logger = logging.getLogger('self-status-page')
 logger.setLevel(logging.INFO)
@@ -107,14 +110,31 @@ def build_html():
     results = [result for data in datas for result in data['results']]
     results = sorted(results, key=lambda x: -x[1])[:100000]
     context = {
-        'task_groups': task_groups,
+        'task_groups': {
+            k: {
+                'name': v['name'],
+                'tasks': [
+                    {
+                        'name': t['name'],
+                        'task_id': t['task_id'],
+                        'type': t['type'],
+                    }
+                    for t in v['tasks']
+                ]
+            }
+            for k, v in task_groups.items()
+        },
         'results': results,
     }
     index_template = os.path.join(TEMPLATE_DIR, 'index.html')
     index_html = os.path.join(DATA_DIR, 'index.html')
     with open(index_template) as f:
         template = f.read()
-    content = template.replace(r'{{ context }}', json.dumps(context))
+    content = template.replace(
+        r'{{ context }}', base64.b64encode(
+            json.dumps(context).encode('utf-8')
+        ).decode('utf-8')
+    )
     with open(index_html, 'w') as f:
         f.write(content)
 
@@ -124,15 +144,13 @@ def run_task_http(task):
     if not url:
         return (ERROR_CONFIG, -1, f'task {task["id"]} need url')
     response = subprocess.check_output([
-        'timeout',
-        '10',
         'curl',
         '-H', 'User-Agent: Mozilla/5.0 Chrome/91.0.4469.4 self-status-page',
         '-o', '/dev/null',
         '-s',
         '-w', '%{time_total}',
         url,
-    ])
+    ], timeout=STATUS_CONFIG_TIMEOUT)
     total_time = float(response.decode('utf-8'))
     return None, total_time, 'OK'
 
@@ -142,18 +160,31 @@ def run_task_ping(task):
     if not ip:
         return (ERROR_CONFIG, -1, f'task {task["id"]} need ip')
     cmd = (
-        f"timeout 10 ping -c 1 {ip}"
+        f"ping -c 1 {ip}"
         "| tail -n 1"
         "| awk '{print $4}'"
         "| cut -d'/' -f1"
     )
-    response = subprocess.check_output(cmd, shell=True)
+    response = subprocess.check_output(
+        cmd, shell=True, timeout=STATUS_CONFIG_TIMEOUT
+    )
     total_time = float(response.decode('utf-8')) / 1000
     return None, total_time, 'OK'
 
 
 def run_task_shell(task):
-    print(task)
+    cmd = task.get('cmd')
+    if not cmd:
+        return (ERROR_CONFIG, -1, f'task {task["id"]} need cmd')
+    response = subprocess.check_output(
+        cmd, shell=True, timeout=STATUS_CONFIG_TIMEOUT
+    )
+    response_text = response.decode('utf-8')
+    try:
+        total_time = float(response_text)
+        return None, total_time, 'OK'
+    except (ValueError, TypeError):
+        return None, 0, response_text
 
 
 def run_task(task):
