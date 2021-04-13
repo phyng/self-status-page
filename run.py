@@ -124,15 +124,13 @@ def run_task_http(task):
     if not url:
         return (ERROR_CONFIG, -1, f'task {task["id"]} need url')
     response = subprocess.check_output([
-        'timeout',
-        '10',
         'curl',
         '-H', 'User-Agent: Mozilla/5.0 Chrome/91.0.4469.4 self-status-page',
         '-o', '/dev/null',
         '-s',
         '-w', '%{time_total}',
         url,
-    ])
+    ], timeout=10)
     total_time = float(response.decode('utf-8'))
     return None, total_time, 'OK'
 
@@ -142,12 +140,12 @@ def run_task_ping(task):
     if not ip:
         return (ERROR_CONFIG, -1, f'task {task["id"]} need ip')
     cmd = (
-        f"timeout 10 ping -c 1 {ip}"
+        f"ping -c 1 {ip}"
         "| tail -n 1"
         "| awk '{print $4}'"
         "| cut -d'/' -f1"
     )
-    response = subprocess.check_output(cmd, shell=True)
+    response = subprocess.check_output(cmd, shell=True, timeout=10)
     total_time = float(response.decode('utf-8')) / 1000
     return None, total_time, 'OK'
 

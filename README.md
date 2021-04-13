@@ -26,7 +26,11 @@ At the same time, it supports to manage the configuration through `data/config.e
 
 ```bash
 # replace /path/to/data to you absolute path
-docker run -d -p 8081:80 --name self-status-page -v /path/to/data:/usr/src/app/data phyng/self-status-page:latest
+docker run -d --restart always \
+  -p 8081:80 \
+  --name self-status-page \
+  -v /path/to/data:/usr/src/app/data \
+  phyng/self-status-page:latest
 ```
 
 You can refer to the `data/config.env` file.
@@ -69,3 +73,21 @@ STATUS_BING_URL=https://bing.com/
 - Support for multiple types of detection tasks
 - Support task grouping
 - Support history
+
+## Roadmap
+
+- [x] schedule runner
+  - [x] config parser
+  - [x] log
+  - [x] build
+- [x] docker deployment
+- [ ] detection task
+  - [x] http
+  - [x] ping
+  - [ ] shell
+- [ ] advanced config
+  - [ ] title/theme
+  - [ ] credits
+- [ ] ui
+  - [x] task group
+  - [ ] history list
