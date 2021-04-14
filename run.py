@@ -24,7 +24,8 @@ CONFIG_FILE = (
 ERROR_CONFIG = 'ERROR_CONFIG'
 ERROR_RUN = 'ERROR_RUN'
 
-STATUS_CONFIG_TIMEOUT = int(os.environ.get('STATUS_CONFIG_TIMEOUT') or 30)
+STATUS_CONFIG_TIMEOUT = int(os.environ.get('STATUS_CONFIG_TIMEOUT') or 10)
+STATUS_CONFIG_INTERVAL = int(os.environ.get('STATUS_CONFIG_INTERVAL') or 30)
 
 logger = logging.getLogger('self-status-page')
 logger.setLevel(logging.INFO)
@@ -108,7 +109,7 @@ def build_html():
         return
 
     results = [result for data in datas for result in data['results']]
-    results = sorted(results, key=lambda x: -x[1])[:100000]
+    results = sorted(results, key=lambda x: -x[1])[:1000]
     context = {
         'task_groups': {
             k: {
@@ -266,7 +267,7 @@ def schedule():
             logger.error(e)
             continue
         logger.info('Wait next build ...\n')
-        time.sleep(10)
+        time.sleep(STATUS_CONFIG_INTERVAL)
 
 
 if __name__ == '__main__':
