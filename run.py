@@ -25,6 +25,8 @@ ERROR_RUN = 'ERROR_RUN'
 
 STATUS_CONFIG_TIMEOUT = int(os.environ.get('STATUS_CONFIG_TIMEOUT') or 10)
 STATUS_CONFIG_INTERVAL = int(os.environ.get('STATUS_CONFIG_INTERVAL') or 30)
+STATUS_CONFIG_TITLE = os.environ.get('STATUS_CONFIG_TITLE') or 'Self status page'
+STATUS_CONFIG_TITLE_BACKGROUND = os.environ.get('STATUS_CONFIG_TITLE_BACKGROUND') or '#607d8b'
 
 logger = logging.getLogger('self-status-page')
 logger.setLevel(logging.INFO)
@@ -144,10 +146,11 @@ def build_html():
     index_html = os.path.join(DATA_DIR, 'index.html')
     with open(index_template) as f:
         template = f.read()
-    content = template.replace(
-        r'{{ context }}', base64.b64encode(
-            json.dumps(context).encode('utf-8')
-        ).decode('utf-8')
+    content = (
+        template
+        .replace(r'{{ context }}', base64.b64encode(json.dumps(context).encode('utf-8')).decode('utf-8'))
+        .replace(r'{{ STATUS_CONFIG_TITLE }}', STATUS_CONFIG_TITLE)
+        .replace(r'STATUS_CONFIG_TITLE_BACKGROUND', STATUS_CONFIG_TITLE_BACKGROUND)
     )
     with open(index_html, 'w') as f:
         f.write(content)
