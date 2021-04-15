@@ -66,6 +66,15 @@ STATUS_BING_TYPE=http
 STATUS_BING_URL=https://bing.com/
 ```
 
+## Other config
+
+```bash
+STATUS_CONFIG_TIMEOUT=10
+STATUS_CONFIG_INTERVAL=30
+STATUS_CONFIG_TITLE=Self status page
+STATUS_CONFIG_TITLE_BACKGROUND=#607d8b
+```
+
 ## Features
 
 - One command: docker one-click creation
@@ -81,13 +90,14 @@ STATUS_BING_URL=https://bing.com/
   - [x] log
   - [x] build
 - [x] docker deployment
-- [ ] detection task
+- [x] detection task
   - [x] http
   - [x] ping
-  - [ ] shell
-- [ ] advanced config
-  - [ ] title/theme
-  - [ ] credits
+  - [x] shell
+- [x] advanced config
+  - [x] title/background
+  - [x] timeout/interval
 - [ ] ui
   - [x] task group
   - [ ] history list
+  - [ ] charts

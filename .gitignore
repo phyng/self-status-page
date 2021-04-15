@@ -2,4 +2,5 @@
 *.pyc
 .vscode
 data/*.json
+data/*.ndjson
 data/index.html

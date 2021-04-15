@@ -9,7 +9,6 @@ import base64
 import pprint
 import datetime
 import subprocess
-from pathlib import Path
 from optparse import OptionParser
 
 BASE_DIR = os.path.dirname(__file__)
@@ -26,6 +25,8 @@ ERROR_RUN = 'ERROR_RUN'
 
 STATUS_CONFIG_TIMEOUT = int(os.environ.get('STATUS_CONFIG_TIMEOUT') or 10)
 STATUS_CONFIG_INTERVAL = int(os.environ.get('STATUS_CONFIG_INTERVAL') or 30)
+STATUS_CONFIG_TITLE = os.environ.get('STATUS_CONFIG_TITLE') or 'Self status page'
+STATUS_CONFIG_TITLE_BACKGROUND = os.environ.get('STATUS_CONFIG_TITLE_BACKGROUND') or '#607d8b'
 
 logger = logging.getLogger('self-status-page')
 logger.setLevel(logging.INFO)
@@ -101,15 +102,29 @@ def read_config():
 
 def build_html():
     task_groups = read_config()
-    datas = []
-    for file in Path(DATA_DIR).glob('results-*.json'):
+    results = []
+    now = datetime.datetime.now()
+    files = [(now - datetime.timedelta(days=i)).strftime(r'results-%Y-%m-%d.ndjson') for i in range(3)]
+    files = [os.path.join(DATA_DIR, i) for i in files]
+    for file in files:
+        if not os.path.exists(file):
+            continue
         with open(file) as f:
-            datas.append(json.load(f))
-    if not datas:
-        return
+            for line in f:
+                if not line:
+                    continue
+                try:
+                    results.append(json.loads(line))
+                except json.decoder.JSONDecodeError:
+                    continue
 
-    results = [result for data in datas for result in data['results']]
-    results = sorted(results, key=lambda x: -x[1])[:1000]
+    clean_results = []
+    for group_id, group in task_groups.items():
+        logger.info(f'group={group_id}')
+        for task in group['tasks']:
+            clean_results.extend([i for i in results if i[0] == task['task_id']][:100])
+    clean_results = sorted(clean_results, key=lambda x: -x[1])
+
     context = {
         'task_groups': {
             k: {
@@ -125,16 +140,17 @@ def build_html():
             }
             for k, v in task_groups.items()
         },
-        'results': results,
+        'results': clean_results,
     }
     index_template = os.path.join(TEMPLATE_DIR, 'index.html')
     index_html = os.path.join(DATA_DIR, 'index.html')
     with open(index_template) as f:
         template = f.read()
-    content = template.replace(
-        r'{{ context }}', base64.b64encode(
-            json.dumps(context).encode('utf-8')
-        ).decode('utf-8')
+    content = (
+        template
+        .replace(r'{{ context }}', base64.b64encode(json.dumps(context).encode('utf-8')).decode('utf-8'))
+        .replace(r'{{ STATUS_CONFIG_TITLE }}', STATUS_CONFIG_TITLE)
+        .replace(r'STATUS_CONFIG_TITLE_BACKGROUND', STATUS_CONFIG_TITLE_BACKGROUND)
     )
     with open(index_html, 'w') as f:
         f.write(content)
@@ -225,25 +241,11 @@ def run_tasks():
                 message,
             ])
     file_path = os.path.join(
-        DATA_DIR, datetime.datetime.now().strftime(r'results-%Y-%m-%d.json')
+        DATA_DIR, datetime.datetime.now().strftime(r'results-%Y-%m-%d.ndjson')
     )
-    results_data = {
-        'version': 1,
-        'last_modified': time.time(),
-        'results': results,
-    }
-    if os.path.exists(file_path):
-        with open(file_path) as f:
-            try:
-                old_results_data = json.load(f)
-                results_data['results'] = (
-                    old_results_data.get('results', []) +
-                    results_data['results']
-                )
-            except json.decoder.JSONDecodeError:
-                pass
-    with open(file_path, 'w') as f:
-        json.dump(results_data, f, ensure_ascii=False)
+    with open(file_path, 'a') as f:
+        for result in results:
+            f.write(json.dumps(result) + '\n')
 
     build_html()
 
