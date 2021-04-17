@@ -118,6 +118,7 @@ def build_html():
                 except json.decoder.JSONDecodeError:
                     continue
 
+    results = sorted(results, key=lambda x: -x[1])
     clean_results = []
     for group_id, group in task_groups.items():
         logger.info(f'group={group_id}')
